@@ -11,10 +11,22 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-
+import java.util.Random;
+import java.util.Scanner;
 public class MainActivity extends AppCompatActivity {
 
-    private static final int COLUMN_COUNT = 2;
+    private static final int COLUMN_COUNT = 10;
+    private static boolean isFlagging = false;
+    private static int flagLeft = 4;
+    private GridLayout gridLayout;
+    private int rows = 12; // Number of rows
+    private int cols = 10; // Number of columns
+    private int numMines = 4; // Number of mines
+    private int[][] cells; // Array to store index of grid representing cells
+    private boolean[][] isMine; // Array to track mine locations
+    private boolean[][] isRevealed; // Array to track revealed cells
+    //private boolean[][] isFlagged; // Array to track flagged cells
+    private boolean gameOver = false;
 
     // save the TextViews of all cells in an array, so later on,
     // when a TextView is clicked, we know which cell it is
@@ -25,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         return Math.round(dp * density);
     }
 
+    // Following function generate the 12x10 grid layout for the game
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,41 +45,13 @@ public class MainActivity extends AppCompatActivity {
 
         cell_tvs = new ArrayList<TextView>();
 
-        // Method (1): add statically created cells
-        TextView tv00 = (TextView) findViewById(R.id.textView00);
-        TextView tv01 = (TextView) findViewById(R.id.textView01);
-        TextView tv10 = (TextView) findViewById(R.id.textView10);
-        TextView tv11 = (TextView) findViewById(R.id.textView11);
-
-        tv00.setTextColor(Color.GRAY);
-        tv00.setBackgroundColor(Color.GRAY);
-        tv00.setOnClickListener(this::onClickTV);
-
-        tv01.setTextColor(Color.GRAY);
-        tv01.setBackgroundColor(Color.GRAY);
-        tv01.setOnClickListener(this::onClickTV);
-
-        tv10.setTextColor(Color.GRAY);
-        tv10.setBackgroundColor(Color.GRAY);
-        tv10.setOnClickListener(this::onClickTV);
-
-        tv11.setTextColor(Color.GRAY);
-        tv11.setBackgroundColor(Color.GRAY);
-        tv11.setOnClickListener(this::onClickTV);
-
-        cell_tvs.add(tv00);
-        cell_tvs.add(tv01);
-        cell_tvs.add(tv10);
-        cell_tvs.add(tv11);
-
-        // Method (2): add four dynamically created cells
         GridLayout grid = (GridLayout) findViewById(R.id.gridLayout01);
-        for (int i = 2; i<=3; i++) {
-            for (int j=0; j<=1; j++) {
+        for (int i = 0; i<=11; i++) {
+            for (int j = 0; j <= 9; j++) {
                 TextView tv = new TextView(this);
-                tv.setHeight( dpToPixel(64) );
-                tv.setWidth( dpToPixel(64) );
-                tv.setTextSize( 32 );//dpToPixel(32) );
+                tv.setHeight(dpToPixel(32));
+                tv.setWidth(dpToPixel(32));
+                tv.setTextSize(16);//dpToPixel(32) );
                 tv.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
                 tv.setTextColor(Color.GRAY);
                 tv.setBackgroundColor(Color.GRAY);
@@ -82,27 +67,7 @@ public class MainActivity extends AppCompatActivity {
                 cell_tvs.add(tv);
             }
         }
-
-        // Method (3): add four dynamically created cells with LayoutInflater
-        LayoutInflater li = LayoutInflater.from(this);
-        for (int i = 4; i<=5; i++) {
-            for (int j=0; j<=1; j++) {
-                TextView tv = (TextView) li.inflate(R.layout.custom_cell_layout, grid, false);
-                //tv.setText(String.valueOf(i)+String.valueOf(j));
-                tv.setTextColor(Color.GRAY);
-                tv.setBackgroundColor(Color.GRAY);
-                tv.setOnClickListener(this::onClickTV);
-
-                GridLayout.LayoutParams lp = (GridLayout.LayoutParams) tv.getLayoutParams();
-                lp.rowSpec = GridLayout.spec(i);
-                lp.columnSpec = GridLayout.spec(j);
-
-                grid.addView(tv, lp);
-
-                cell_tvs.add(tv);
-            }
-        }
-
+        initializeGame();
     }
 
     private int findIndexOfCellTextView(TextView tv) {
@@ -118,13 +83,180 @@ public class MainActivity extends AppCompatActivity {
         int n = findIndexOfCellTextView(tv);
         int i = n/COLUMN_COUNT;
         int j = n%COLUMN_COUNT;
-        tv.setText(String.valueOf(i)+String.valueOf(j));
-        if (tv.getCurrentTextColor() == Color.GRAY) {
+        //int count = countAdjacentMines(mineLocations, row, col);
+        //tv.setText(String.valueOf(count));
+        /*if (tv.getCurrentTextColor() == Color.GRAY) {
             tv.setTextColor(Color.GREEN);
             tv.setBackgroundColor(Color.parseColor("lime"));
         }else {
             tv.setTextColor(Color.GRAY);
             tv.setBackgroundColor(Color.LTGRAY);
+        }*/
+        if(isMine[i][j] == true){
+            tv.setText("mine");
+        }
+        tv.setTextColor(Color.GRAY);
+        tv.setBackgroundColor(Color.LTGRAY);
+        onCellClick(i,j,tv);
+    }
+
+    private void initializeGame() {
+        cells = new int[rows][cols];
+        isMine = new boolean[rows][cols];
+        isRevealed = new boolean[rows][cols];
+        gameOver = false;
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                cells[row][col] = row*10+col; // finding the index of the grid
+                isMine[row][col] = false;
+                isRevealed[row][col] = false;
+               // isFlagged[row][col] = false;
+                /*cells[row][col].setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (!gameOver) {
+                            int clickedRow = (int) v.getTag(R.id.row);
+                            int clickedCol = (int) v.getTag(R.id.col);
+                            onCellClick(clickedRow, clickedCol);
+                        }
+                    }
+                });
+                gridLayout.addView(cells[row][col]);*/
+            }
+        }
+        // Generate mine locations
+        generateMines();
+    }
+
+    private void generateMines() {
+        Random random = new Random();
+        int minesPlaced = 0;
+
+        while (minesPlaced < numMines) {
+            int row = random.nextInt(rows);
+            int col = random.nextInt(cols);
+
+            if (!isMine[row][col]) {
+                isMine[row][col] = true;
+                minesPlaced++;
+            }
+        }
+    }
+    private void onCellClick(int row, int col,TextView tv) {
+        if(!isFlagging) {
+            if (!isRevealed[row][col]) {
+                isRevealed[row][col] = true;
+
+                if (isMine[row][col]) {
+                    // Game over, the clicked cell is a mine
+                    gameOver = true;
+                    revealMines();
+                } else {
+                    // Calculate the number of adjacent mines
+                    int adjacentMines = countAdjacentMines(row, col);
+
+                    // Update the cell's appearance and text
+                    tv.setText(String.valueOf(adjacentMines));
+
+                    if (adjacentMines == 0) {
+                        // If the cell has no adjacent mines, reveal adjacent cells recursively
+                        revealAdjacentCells(row, col);
+                    }
+                }
+            }
+        }else {
+            placeFlag(row, col, tv);
+        }
+        // Check for win condition
+        if (!gameOver && checkWinCondition()) {
+            gameOver = true;
+        }
+    }
+
+    private int countAdjacentMines(int row, int col) {
+        int count = 0;
+        int[][] directions = {
+                {-1, -1}, {-1, 0}, {-1, 1},
+                {0, -1}, /*(row, col)*/ {0, 1},
+                {1, -1}, {1, 0}, {1, 1}
+        };
+
+        for (int[] dir : directions) {
+            int newRow = row + dir[0];
+            int newCol = col + dir[1];
+
+            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && isMine[newRow][newCol]) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private void revealAdjacentCells(int row, int col) {
+        int[][] directions = {
+                {-1, -1}, {-1, 0}, {-1, 1},
+                {0, -1}, /*(row, col)*/ {0, 1},
+                {1, -1}, {1, 0}, {1, 1}
+        };
+
+        for (int[] dir : directions) {
+            int newRow = row + dir[0];
+            int newCol = col + dir[1];
+
+            if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && !isRevealed[newRow][newCol]) {
+               onClickTV(cell_tvs.get(cells[newRow][newCol]));
+            }
+        }
+    }
+    private void revealMines() {
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                if (isMine[row][col]) {
+                    cell_tvs.get(cells[row][col]).setText("Mine"); // Display a mine
+                }
+            }
+        }
+    }
+
+    private boolean checkWinCondition() {
+        // Check if all non-mine cells are revealed
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                if (!isMine[row][col] && !isRevealed[row][col]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private void placeFlag(int row, int col, TextView tv){
+       /* if (isFlagged[row][col]){
+            tv.setText("");
+            flagLeft++;
+        }
+        */
+
+                String flag = getString(R.string.flag);
+                tv.setText(flag);
+                flagLeft--;
+                TextView tv1 = (TextView) findViewById(R.id.flagLeft);
+                tv1.setText(String.valueOf(flagLeft));
+                //isFlagged[row][col] = true;
+
+    }
+
+    public void onButtonClick(View view) {
+        TextView tv = (TextView) view;
+        if (!isFlagging) {
+            String flag = getString(R.string.flag);
+            tv.setText(flag);
+            isFlagging = true;
+        }else{
+            String pick = getString(R.string.pick);
+            tv.setText(pick);
+            isFlagging = false;
         }
     }
 }
