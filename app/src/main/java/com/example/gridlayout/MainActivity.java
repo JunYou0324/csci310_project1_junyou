@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private int[][] cells; // Array to store index of grid representing cells
     private boolean[][] isMine; // Array to track mine locations
     private boolean[][] isRevealed; // Array to track revealed cells
-    //private boolean[][] isFlagged; // Array to track flagged cells
+    private boolean[][] isFlagged; // Array to track flagged cells
     private boolean gameOver = false;
 
     // save the TextViews of all cells in an array, so later on,
@@ -104,13 +104,14 @@ public class MainActivity extends AppCompatActivity {
         cells = new int[rows][cols];
         isMine = new boolean[rows][cols];
         isRevealed = new boolean[rows][cols];
+        isFlagged = new boolean[rows][cols];
         gameOver = false;
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 cells[row][col] = row*10+col; // finding the index of the grid
                 isMine[row][col] = false;
                 isRevealed[row][col] = false;
-               // isFlagged[row][col] = false;
+                isFlagged[row][col] = false;
                 /*cells[row][col].setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -232,19 +233,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void placeFlag(int row, int col, TextView tv){
-       /* if (isFlagged[row][col]){
-            tv.setText("");
-            flagLeft++;
-        }
-        */
-
+        if (flagLeft > 0) {
+            if (isFlagged[row][col]) {
+                tv.setText("");
+                flagLeft++;
+                isFlagged[row][col] = false;
+            } else {
                 String flag = getString(R.string.flag);
                 tv.setText(flag);
                 flagLeft--;
-                TextView tv1 = (TextView) findViewById(R.id.flagLeft);
-                tv1.setText(String.valueOf(flagLeft));
-                //isFlagged[row][col] = true;
-
+                isFlagged[row][col] = true;
+            }
+            TextView tv1 = (TextView) findViewById(R.id.flagLeft);
+            tv1.setText(String.valueOf(flagLeft));
+        }
     }
 
     public void onButtonClick(View view) {
