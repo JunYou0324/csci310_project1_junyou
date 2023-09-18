@@ -83,15 +83,6 @@ public class MainActivity extends AppCompatActivity {
         int n = findIndexOfCellTextView(tv);
         int i = n/COLUMN_COUNT;
         int j = n%COLUMN_COUNT;
-        //int count = countAdjacentMines(mineLocations, row, col);
-        //tv.setText(String.valueOf(count));
-        /*if (tv.getCurrentTextColor() == Color.GRAY) {
-            tv.setTextColor(Color.GREEN);
-            tv.setBackgroundColor(Color.parseColor("lime"));
-        }else {
-            tv.setTextColor(Color.GRAY);
-            tv.setBackgroundColor(Color.LTGRAY);
-        }*/
         if(isMine[i][j] == true){
             tv.setText("mine");
         }
@@ -112,17 +103,6 @@ public class MainActivity extends AppCompatActivity {
                 isMine[row][col] = false;
                 isRevealed[row][col] = false;
                 isFlagged[row][col] = false;
-                /*cells[row][col].setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (!gameOver) {
-                            int clickedRow = (int) v.getTag(R.id.row);
-                            int clickedCol = (int) v.getTag(R.id.col);
-                            onCellClick(clickedRow, clickedCol);
-                        }
-                    }
-                });
-                gridLayout.addView(cells[row][col]);*/
             }
         }
         // Generate mine locations
