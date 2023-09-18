@@ -6,6 +6,7 @@ import androidx.gridlayout.widget.GridLayout;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
@@ -27,6 +28,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean[][] isRevealed; // Array to track revealed cells
     private boolean[][] isFlagged; // Array to track flagged cells
     private boolean gameOver = false;
+    private int clock = 0;
+    private boolean running = false;
+
 
     // save the TextViews of all cells in an array, so later on,
     // when a TextView is clicked, we know which cell it is
@@ -103,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
                 isMine[row][col] = false;
                 isRevealed[row][col] = false;
                 isFlagged[row][col] = false;
+                runTimer();
             }
         }
         // Generate mine locations
@@ -209,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+        running = false;
         return true;
     }
 
@@ -218,15 +224,18 @@ public class MainActivity extends AppCompatActivity {
                 tv.setText("");
                 flagLeft++;
                 isFlagged[row][col] = false;
-            } else {
+            } else if(!isFlagged[row][col]&&!isRevealed[row][col]) {
                 String flag = getString(R.string.flag);
                 tv.setText(flag);
                 flagLeft--;
                 isFlagged[row][col] = true;
+                isRevealed[row][col] = true;
             }
-            TextView tv1 = (TextView) findViewById(R.id.flagLeft);
-            tv1.setText(String.valueOf(flagLeft));
+        }else{
+
         }
+        TextView tv1 = (TextView) findViewById(R.id.flagLeft);
+        tv1.setText(String.valueOf(flagLeft));
     }
 
     public void onButtonClick(View view) {
@@ -240,5 +249,25 @@ public class MainActivity extends AppCompatActivity {
             tv.setText(pick);
             isFlagging = false;
         }
+    }
+
+    private void runTimer() {
+        running = true;
+        final TextView timeView = (TextView) findViewById(R.id.clockTime);
+        final Handler handler = new Handler();
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                int seconds = clock/60;
+                String time = String.valueOf(seconds);
+                timeView.setText(time);
+
+                if (running) {
+                    clock++;
+                }
+                handler.postDelayed(this, 1000);
+            }
+        });
     }
 }

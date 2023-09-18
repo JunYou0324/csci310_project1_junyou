@@ -60,4 +60,28 @@
         app:layout_constraintStart_toEndOf="@+id/flag"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/clockImage"
+        android:layout_width="66dp"
+        android:layout_height="77dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="24dp"
+        android:text="@string/clock"
+        android:textColor="@color/black"
+        android:textSize="40sp"
+        app:layout_constraintStart_toEndOf="@+id/flagLeft"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/clockTime"
+        android:layout_width="66dp"
+        android:layout_height="77dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="24dp"
+        android:text="0"
+        android:textColor="@color/black"
+        android:textSize="40sp"
+        app:layout_constraintStart_toEndOf="@+id/clockImage"
+        app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
