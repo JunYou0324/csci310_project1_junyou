@@ -3,6 +3,7 @@ package com.example.gridlayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.gridlayout.widget.GridLayout;
 
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -29,7 +30,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean[][] isFlagged; // Array to track flagged cells
     private boolean gameOver = false;
     private int clock = 0;
+    private int secondsElapsed = 0;
     private boolean running = false;
+    private boolean gameWon = false;
+
 
 
     // save the TextViews of all cells in an array, so later on,
@@ -87,11 +91,8 @@ public class MainActivity extends AppCompatActivity {
         int n = findIndexOfCellTextView(tv);
         int i = n/COLUMN_COUNT;
         int j = n%COLUMN_COUNT;
-        if(isMine[i][j] == true){
-            tv.setText("mine");
-        }
         tv.setTextColor(Color.GRAY);
-        tv.setBackgroundColor(Color.LTGRAY);
+        tv.setBackgroundColor(Color.GREEN);
         onCellClick(i,j,tv);
     }
 
@@ -136,6 +137,8 @@ public class MainActivity extends AppCompatActivity {
                 if (isMine[row][col]) {
                     // Game over, the clicked cell is a mine
                     gameOver = true;
+                    running = false;
+                    gameWon = false;
                     revealMines();
                 } else {
                     // Calculate the number of adjacent mines
@@ -156,6 +159,7 @@ public class MainActivity extends AppCompatActivity {
         // Check for win condition
         if (!gameOver && checkWinCondition()) {
             gameOver = true;
+            resultPage();
         }
     }
 
@@ -199,7 +203,8 @@ public class MainActivity extends AppCompatActivity {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 if (isMine[row][col]) {
-                    cell_tvs.get(cells[row][col]).setText("Mine"); // Display a mine
+                    cell_tvs.get(cells[row][col]).setText(R.string.mine); // Display a mine
+                    resultPage();
                 }
             }
         }
@@ -215,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         running = false;
+        gameWon = true;
         return true;
     }
 
@@ -259,8 +265,8 @@ public class MainActivity extends AppCompatActivity {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                int seconds = clock/60;
-                String time = String.valueOf(seconds);
+                secondsElapsed = clock/60;
+                String time = String.valueOf(secondsElapsed);
                 timeView.setText(time);
 
                 if (running) {
@@ -269,5 +275,17 @@ public class MainActivity extends AppCompatActivity {
                 handler.postDelayed(this, 1000);
             }
         });
+    }
+
+    private void resultPage(){
+        String message;
+        Intent intent = new Intent(this, Result.class);
+        if(gameWon){
+            message = "Used " + String.valueOf(secondsElapsed)  + " seconds. You won. Good job!";
+        }else{
+            message = "Used " + String.valueOf(secondsElapsed)  + " seconds. You lost. Let's try again!";
+        }
+        intent.putExtra("com.example.gridlayout.MESSAGE", message);
+        startActivity(intent);
     }
 }
