@@ -8,22 +8,18 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.Scanner;
 public class MainActivity extends AppCompatActivity {
 
     private static final int COLUMN_COUNT = 10;
     private static boolean isFlagging = false;
     private static int flagLeft = 4;
-    private GridLayout gridLayout;
-    private int rows = 12; // Number of rows
-    private int cols = 10; // Number of columns
-    private int numMines = 4; // Number of mines
+    private final int rows = 12; // Number of rows
+    private final int cols = 10; // Number of columns
     private int[][] cells; // Array to store index of grid representing cells
     private boolean[][] isMine; // Array to track mine locations
     private boolean[][] isRevealed; // Array to track revealed cells
@@ -51,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        cell_tvs = new ArrayList<TextView>();
+        cell_tvs = new ArrayList<>();
 
         GridLayout grid = (GridLayout) findViewById(R.id.gridLayout01);
         for (int i = 0; i<=11; i++) {
@@ -119,6 +115,8 @@ public class MainActivity extends AppCompatActivity {
         Random random = new Random();
         int minesPlaced = 0;
 
+        // Number of mines
+        int numMines = 4;
         while (minesPlaced < numMines) {
             int row = random.nextInt(rows);
             int col = random.nextInt(cols);
@@ -130,36 +128,39 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private void onCellClick(int row, int col,TextView tv) {
-        if(!isFlagging) {
-            if (!isRevealed[row][col]) {
-                isRevealed[row][col] = true;
+        if(gameOver){
+            resultPage();
+        }else {
+            if (!isFlagging) {
+                if (!isRevealed[row][col]) {
+                    isRevealed[row][col] = true;
 
-                if (isMine[row][col]) {
-                    // Game over, the clicked cell is a mine
-                    gameOver = true;
-                    running = false;
-                    gameWon = false;
-                    revealMines();
-                } else {
-                    // Calculate the number of adjacent mines
-                    int adjacentMines = countAdjacentMines(row, col);
+                    if (isMine[row][col]) {
+                        // Game over, the clicked cell is a mine
+                        gameOver = true;
+                        running = false;
+                        gameWon = false;
+                        revealMines();
+                    } else {
+                        // Calculate the number of adjacent mines
+                        int adjacentMines = countAdjacentMines(row, col);
 
-                    // Update the cell's appearance and text
-                    tv.setText(String.valueOf(adjacentMines));
+                        // Update the cell's appearance and text
+                        tv.setText(String.valueOf(adjacentMines));
 
-                    if (adjacentMines == 0) {
-                        // If the cell has no adjacent mines, reveal adjacent cells recursively
-                        revealAdjacentCells(row, col);
+                        if (adjacentMines == 0) {
+                            // If the cell has no adjacent mines, reveal adjacent cells recursively
+                            revealAdjacentCells(row, col);
+                        }
                     }
                 }
+            } else {
+                placeFlag(row, col, tv);
             }
-        }else {
-            placeFlag(row, col, tv);
-        }
-        // Check for win condition
-        if (!gameOver && checkWinCondition()) {
-            gameOver = true;
-            resultPage();
+            // Check for win condition
+            if (checkWinCondition()) {
+                gameOver = true;
+            }
         }
     }
 
@@ -203,8 +204,8 @@ public class MainActivity extends AppCompatActivity {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 if (isMine[row][col]) {
-                    cell_tvs.get(cells[row][col]).setText(R.string.mine); // Display a mine
-                    resultPage();
+                    cell_tvs.get(cells[row][col]).setText(R.string.mine); // Display mines
+                    gameOver = true;
                 }
             }
         }
@@ -237,8 +238,6 @@ public class MainActivity extends AppCompatActivity {
                 isFlagged[row][col] = true;
                 isRevealed[row][col] = true;
             }
-        }else{
-
         }
         TextView tv1 = (TextView) findViewById(R.id.flagLeft);
         tv1.setText(String.valueOf(flagLeft));
@@ -281,9 +280,9 @@ public class MainActivity extends AppCompatActivity {
         String message;
         Intent intent = new Intent(this, Result.class);
         if(gameWon){
-            message = "Used " + String.valueOf(secondsElapsed)  + " seconds. You won. Good job!";
+            message = "Used " + secondsElapsed + " seconds. You won. Good job!";
         }else{
-            message = "Used " + String.valueOf(secondsElapsed)  + " seconds. You lost. Let's try again!";
+            message = "Used " + secondsElapsed + " seconds. You lost. Let's try again!";
         }
         intent.putExtra("com.example.gridlayout.MESSAGE", message);
         startActivity(intent);

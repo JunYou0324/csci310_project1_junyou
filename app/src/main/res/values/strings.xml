@@ -1,8 +1,11 @@
 <resources>
-    <string name="app_name">GridLayout</string>
+    <string name="app_name">CS310 JUNYOU</string>
     <string name="clock">\uD83D\uDD53</string>
     <string name="flag">\uD83D\uDEA9</string>
     <string name="mine">\uD83D\uDCA3</string>
     <string name="pick">\u26CF</string>
     <string name="_4">4</string>
+    <string name="textview">TextView</string>
+    <string name="play_again">PLAY AGAIN</string>
+    <string name="_0">0</string>
 </resources>
